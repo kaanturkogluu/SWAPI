@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAR WARS API</title>
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+</head>
+
+<body>
+
+
+    <div class="content  m-3 border p-4 rounded-3">
+        <div class="row">
+            <h4> Doğrulama Gerektirmeyen Bir API için Veri Çekme İşlemlerinin En Basit Hali Verilmiştir </h4>
+
+
+            <ul>
+                <li>İstenilen api linkine get/post/put ihtiyacınızı olan isteği atın</li>
+                <li>Dönen Yanıtı İstediğiniz Gibi Kullanın</li>
+                <li>Kilit Kısım Tamamen Ajax isteğinde gerçekleşip gennelikle api yanıtları json formatında döner</li>
+                <li>API İSTEĞİ GÖNDER butonuna tıklayıp verilerin gelmesini bekleyin , daha sonra gelen verileri
+                    inceleyebilirsiniz. Veriler Gelene kadar sabredin , loading animasyonu ile zaman kaybetmek istemedim
+                </li>
+            </ul>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <label for="">Base URL : (İstek ATILAN SİTENİN URL ADRESİ) ===> </label> <a href="https://swapi.dev">SWAPI</a>
+                <label for=""> İstek Atılan Api ADRESİ: </label> <textarea name="" id="" cols="30" rows="1"
+                    readonly>https://swapi.dev/api/films</textarea>
+                <button class="btn btn-warning btn-lg" onclick="sendReq()">API İSTEĞİ GÖNDER</button>
+            </div>
+
+            <div class="funk col-md-12 mt-3" style="display: none;">
+                <div class="row">
+                    <div class="col-md-3">
+                        <button class="btn btn-success" onclick="WriteConsole()">Tüm API yanıtını Konsola Yaz</button>
+
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-success" onclick="writeAPIhead()">Tüm API Keylerini Konsola Yaz</button>
+
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-success" onclick="clearCons()">Konsole u Temizle</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="container">
+        <h4 class="text-muted m-2 border rounded-2">SWAPI Sayfasını Sağlamış Olduğu API nın içerikleri Lİstelenmiştir
+        </h4>
+        <h4> Bulunan Film Sayısı : <span class="text-muted" id="filmsayisi"></span></h4>
+        <div class="row" id="filmCards"></div>
+    </div>
+
+
+
+    <div id="console" class="w-100 border rounded-3  p-4">
+        <button class="btn btn-info mb-3" id="copy">Konsolu Kopyala</button>
+        <div id="cons-text">
+
+        </div>
+    </div>
+
+    <p id="sureGostergesi"></p>
+    <style>
+        #copy {
+            position: static;
+            bottom: 0;
+        }
+
+        #console {
+            position: sticky;
+            bottom: 0;
+            color: green;
+            background-color: black;
+            height: 35vh;
+            overflow-y: scroll;
+
+        }
+    </style>
+    <!-- Bootstrap JS CDN -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // console.log() çağrılarını yakalayıp sayfada gösterme
+        (function () {
+            var oldLog = console.log;
+            console.log = function (message) {
+                var consoleLogsElement = document.getElementById('cons-text');
+                consoleLogsElement.innerHTML += '<p>' + message + '</p>';
+                oldLog.apply(console, arguments);
+            }
+        })();
+        var yanit;
+        var basliklar;
+        //konsol kopyalama
+        $(document).ready(function () {
+            $("#copy").click(function () {
+                // Metni kopyala
+
+                var copyText = document.getElementById("cons-text");
+
+                var range = document.createRange();
+                range.selectNode(copyText);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand("copy");
+                window.getSelection().removeAllRanges();
+
+                if (copyText.innerText == '' || copyText.innerText === undefined) {
+                    alert(
+                        'Sıkıntıların mı Var? Boş Konsolu Neden Kopyalamaya Çalışıyorsun? \n Git istek filan at gelen verileri incele');
+                    return;
+                }
+                // Kullanıcıya bir bilgi mesajı göster
+                alert("Metin kopyalandı: " + copyText.innerText);
+            });
+        });
+
+        function sendReq() {
+            $.ajax({
+                url: 'https://swapi.dev/api/films',
+                method: 'GET',
+                success: function (response) {
+                    $(".funk").toggle('.7');
+                    yanit = (JSON.stringify(
+                    response)); //konsola yazılabilmesi için yanıtı değişkende saklar 
+                    $("#filmsayisi").text(response.count);
+
+
+                    response.results.forEach(function (film, index) {
+                        if (index === 0) { // Sadece ilk filmi baz alarak anahtarları alıyoruz
+                            basliklar = Object.keys(film);
+                        }
+
+                        var cardHtml = `
+                <div class="card col-3 m-3">
+                    <div class="card-body">
+                        <h5 class="card-title">${film.title}</h5>
+                        <p class="card-text">${film.opening_crawl}</p>
+                        <a href="#" class="btn btn-primary">Detaylar</a>
+                    </div>
+                </div>`;
+                        $("#filmCards").append(cardHtml);
+                    });
+
+
+                },
+                error: function (xhr, status, error) {
+                    console.error('Hata:', error);
+                }
+            });
+        }
+
+        function writeAPIhead() {
+            say = 1;
+            console.log("API KEYLER");
+            basliklar.forEach(function (item) {
+
+                console.log(say + '. KEY  = ' + item);
+                say++;
+
+            })
+
+        }
+
+        function clearCons() {
+            console.clear();
+            $("#cons-text").html('');
+        }
+
+        function WriteConsole() {
+            console.log(this.yanit);
+        }
+    </script>
+
+</html>
